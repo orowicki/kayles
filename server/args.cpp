@@ -43,6 +43,15 @@ ServerConfig parse_args(int argc, char *argv[])
         }
     }
 
+    if (pawn_string.empty())
+        throw invalid_argument("Missing -r (pawn row)");
+    if (address.empty())
+        throw invalid_argument("Missing -a (address)");
+    if (port == -1)
+        throw invalid_argument("Missing -p (port)");
+    if (timeout == -1)
+        throw invalid_argument("Missing -t (timeout)");
+
     if (optind < argc)
         throw invalid_argument("Unexpected extra positional arguments!");
 
@@ -57,7 +66,7 @@ ServerConfig parse_args(int argc, char *argv[])
     return cfg;
 }
 
-} /* namespace */
+} // namespace
 
 ServerConfig configure_from_args(int argc, char *argv[])
 {

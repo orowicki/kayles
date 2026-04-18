@@ -16,23 +16,6 @@ using std::vector;
 namespace
 {
 
-void validate_address(const string &s)
-{
-    if (s.empty())
-        throw invalid_argument("Address not provided!");
-
-    struct addrinfo hints{};
-    struct addrinfo *res;
-
-    hints.ai_family = AF_INET;
-    hints.ai_socktype = SOCK_DGRAM;
-
-    if (getaddrinfo(s.c_str(), nullptr, &hints, &res) != 0)
-        throw invalid_argument("Invalid IPv4 address or domain name: " + s);
-
-    freeaddrinfo(res);
-}
-
 void validate_port(int port)
 {
     if (port < MIN_PORT || port > MAX_PORT)
@@ -47,8 +30,8 @@ void validate_timeout(int timeout)
 
 void validate_pawn_string(const string &s)
 {
-    if (s.empty() || s.size() < MIN_PAWNS || s.size() > MAX_PAWNS ||
-        s.front() != '1' || s.back() != '1')
+    if (s.size() < MIN_PAWNS || s.size() > MAX_PAWNS || s.front() != '1' ||
+        s.back() != '1')
         throw invalid_argument("Invalid pawn row format!");
 
     for (auto c : s)
@@ -74,7 +57,7 @@ buffer_t parse_pawn_row(const string &s)
     for (size_t i = 0; i < n; ++i) {
         if (s[i] == '1') {
             auto [byte_idx, bit_idx] = find_bit_idxs(i);
-            pawn_row[byte_idx] |= (1 << bit_idx);
+            pawn_row[byte_idx] |= (uint8_t{ 1 } << bit_idx);
         }
     }
 

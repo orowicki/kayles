@@ -1,9 +1,6 @@
-#include "client.h"
-#include "../common/protocol.h"
-#include "../common/utils.h"
-#include "client_config.h"
 #include <arpa/inet.h>
 #include <cerrno>
+#include <iomanip>
 #include <iostream>
 #include <netdb.h>
 #include <stdexcept>
@@ -11,10 +8,21 @@
 #include <sys/time.h>
 #include <unistd.h>
 
+#include "../common/protocol.h"
+#include "../common/utils.h"
+#include "client.h"
+#include "client_config.h"
+
 using std::cout;
+using std::hex;
+using std::memcpy;
 using std::runtime_error;
+using std::setfill;
+using std::setw;
+using std::string;
 using std::to_string;
 using std::to_underlying;
+using std::uppercase;
 
 namespace sf = server::field;
 namespace sm = server::msg;
@@ -33,7 +41,8 @@ void print_error_response(const buffer_t &buf)
 
     cout << "Echoed data: ";
     for (size_t i = 0; i < sm::WrongMsg::SIZE; ++i)
-        printf("%02X ", buf[i]);
+        cout << hex << uppercase << setw(2) << setfill('0')
+             << static_cast<int>(buf[i]) << ' ';
 
     cout << '\n';
 }
@@ -100,14 +109,14 @@ void print_game_state(const buffer_t &buf)
     print_status(status);
     print_board(max_pawn, buf);
 }
-} // namespace
+} /* namespace */
 
 Client::Client(const ClientConfig &config) : cfg(config), socket_fd(-1)
 {
     setup_socket();
 }
 
-Client::~Client()
+Client::~Client() noexcept
 {
     if (socket_fd != -1)
         close(socket_fd);
@@ -120,12 +129,12 @@ void Client::setup_socket()
     hints.ai_socktype = SOCK_DGRAM;
     hints.ai_protocol = IPPROTO_UDP;
 
-    std::string port_str = std::to_string(cfg.port);
+    string port_str = to_string(cfg.port);
 
     if (getaddrinfo(cfg.address.c_str(), port_str.c_str(), &hints, &res) != 0)
         throw runtime_error("Failed to resolve server address: " + cfg.address);
 
-    std::memcpy(&server_addr, res->ai_addr, res->ai_addrlen);
+    memcpy(&server_addr, res->ai_addr, res->ai_addrlen);
 
     freeaddrinfo(res);
 
@@ -159,22 +168,29 @@ void Client::receive_response()
     sockaddr_in from_addr{};
     socklen_t from_len = sizeof(from_addr);
 
-    ssize_t received_bytes =
-        recvfrom(socket_fd, buffer.data(), buffer.size(), 0,
-                 reinterpret_cast<struct sockaddr *>(&from_addr), &from_len);
+    while (true) {
+        ssize_t received_bytes = recvfrom(
+            socket_fd, buffer.data(), buffer.size(), 0,
+            reinterpret_cast<struct sockaddr *>(&from_addr), &from_len);
 
-    if (received_bytes < 0)
-        return;
+        if (received_bytes < 0) {
+            cout << "Timeout: server did not respond.\n";
+            return;
+        }
 
-    buffer.resize(received_bytes);
+        if (from_addr.sin_addr.s_addr == server_addr.sin_addr.s_addr &&
+            from_addr.sin_port == server_addr.sin_port) {
 
-    print_response(buffer);
+            buffer.resize(received_bytes);
+            print_response(buffer);
+            return;
+        }
+    }
 }
 
-void Client::print_response(const buffer_t &buf)
+void Client::print_response(const buffer_t &buf) noexcept
 {
-    if (buf.size() < sm::WrongMsg::SIZE &&
-        buf.size() < sm::GameState::MIN_SIZE) {
+    if (buf.size() < sm::WrongMsg::SIZE) {
         cout << "Received invalid response (too short: " << buf.size()
              << " bytes).\n";
         return;
@@ -185,7 +201,12 @@ void Client::print_response(const buffer_t &buf)
     if (status == to_underlying(GameStatus::WRONG_MSG)) {
         print_error_response(buf);
     } else {
-        print_game_state(buf);
+        if (buf.size() < sm::GameState::MIN_SIZE) {
+            cout << "Received truncated response (" << buf.size()
+                 << " bytes).\n";
+        } else {
+            print_game_state(buf);
+        }
     }
 }
 

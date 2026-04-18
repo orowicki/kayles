@@ -2,7 +2,6 @@
 #define SERVER_CONFIG_H
 
 #include <cstdint>
-#include <limits>
 #include <string>
 
 #include "../common/protocol.h"

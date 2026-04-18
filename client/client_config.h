@@ -2,7 +2,6 @@
 #define CLIENT_CONFIG_H
 
 #include <cstdint>
-#include <limits>
 #include <string>
 #include <vector>
 
@@ -24,4 +23,4 @@ struct ClientConfig {
 
 buffer_t parse_message(const std::string &s);
 
-#endif
+#endif /* CLIENT_CONFIG_H */

@@ -2,7 +2,6 @@
 #include <string>
 #include <unistd.h>
 
-#include "../common/protocol.h"
 #include "../common/utils.h"
 #include "args.h"
 #include "client_config.h"
@@ -26,15 +25,19 @@ ClientConfig parse_args(int argc, char *argv[])
             case 'a':
                 address = optarg;
                 break;
+
             case 'p':
                 port = parse_int(optarg, "Invalid port number!");
                 break;
+
             case 'm':
                 message = optarg;
                 break;
+
             case 't':
                 timeout = parse_int(optarg, "Invalid timeout length!");
                 break;
+
             case '?':
                 throw invalid_argument("Unknown argument or missing value!");
         }

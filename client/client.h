@@ -10,10 +10,7 @@ class Client
 {
 public:
     explicit Client(const ClientConfig &config);
-    ~Client();
-
-    Client(const Client &) = delete;
-    Client &operator=(const Client &) = delete;
+    ~Client() noexcept;
 
     void run();
 
@@ -25,7 +22,7 @@ private:
     void setup_socket();
     void send_message();
     void receive_response();
-    void print_response(const buffer_t &buf);
+    void print_response(const buffer_t &buf) noexcept;
 };
 
 #endif /* CLIENT_H */

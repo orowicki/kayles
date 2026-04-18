@@ -1,12 +1,14 @@
-#include "game.h"
-#include "../common/protocol.h"
-#include "../common/utils.h"
 #include <algorithm>
 #include <chrono>
 
+#include "../common/protocol.h"
+#include "../common/utils.h"
+#include "game.h"
+
 using std::all_of;
+using std::min;
 using std::chrono::duration_cast;
-using std::chrono::seconds;
+using std::chrono::milliseconds;
 using std::chrono::steady_clock;
 
 GameState::GameState(game_id_t id, player_id_t p_a_id, idx_t max_p,
@@ -21,25 +23,28 @@ GameState::GameState(game_id_t id, player_id_t p_a_id, idx_t max_p,
 bool GameState::process_timeouts(int timeout_sec) noexcept
 {
     auto now = steady_clock::now();
-    auto duration_a = duration_cast<seconds>(now - last_activity_a).count();
-    auto duration_b = duration_cast<seconds>(now - last_activity_b).count();
+    auto duration_a =
+        duration_cast<milliseconds>(now - last_activity_a).count();
+    auto duration_b =
+        duration_cast<milliseconds>(now - last_activity_b).count();
+
+    auto timeout_ms = timeout_sec * 1000LL;
 
     if (status == GameStatus::TURN_A || status == GameStatus::TURN_B) {
-        bool a_timed_out = duration_a >= timeout_sec;
-        bool b_timed_out = duration_b >= timeout_sec;
+        bool a_timed_out = duration_a >= timeout_ms;
+        bool b_timed_out = duration_b >= timeout_ms;
 
         if (a_timed_out || b_timed_out) {
             status = (duration_a >= duration_b) ? GameStatus::WIN_B
                                                 : GameStatus::WIN_A;
             touch(player_a_id);
-            duration_a = 0;
         }
     } else {
         auto min_duration = duration_a;
         if (player_b_id != 0)
-            min_duration = std::min(duration_a, duration_b);
+            min_duration = min(duration_a, duration_b);
 
-        return min_duration >= timeout_sec;
+        return min_duration >= timeout_ms;
     }
 
     return false;

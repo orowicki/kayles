@@ -6,6 +6,8 @@
 #include <cstring>
 #include <vector>
 
+/* -- Type Aliases -- */
+
 using buffer_t = std::vector<uint8_t>;
 using msg_type_t = uint8_t;
 using player_id_t = uint32_t;
@@ -13,10 +15,13 @@ using game_id_t = uint32_t;
 using game_status_t = uint8_t;
 using idx_t = uint8_t;
 
+/* -- Constants -- */
+
 constexpr size_t BYTE_SIZE = 8;
 
 namespace client
 {
+
 namespace field
 {
 struct MsgType {
@@ -64,10 +69,12 @@ struct GiveUp {
     static constexpr size_t FIELDS = 3;
 };
 } // namespace msg
+
 } // namespace client
 
 namespace server
 {
+
 namespace field
 {
 struct GameID {
@@ -104,6 +111,7 @@ struct GameState {
     static constexpr size_t MIN_SIZE = 15;
 };
 } // namespace msg
+
 } // namespace server
 
 enum class GameStatus : game_status_t {
@@ -115,23 +123,34 @@ enum class GameStatus : game_status_t {
     WRONG_MSG = 255
 };
 
+/* -- Client Message Wrapper -- */
+
 struct Message {
-    Message(const buffer_t &b, const sockaddr_in &a, socklen_t l) noexcept
+    Message(const buffer_t &b, const sockaddr_in &a, socklen_t l)
         : buffer(b), client_addr(a), addr_len(l)
     {
     }
-    const buffer_t &buffer;
+
+    buffer_t buffer;
     const sockaddr_in &client_addr;
     socklen_t addr_len;
 };
 
+/* -- Buffer Manipulation Functions -- */
+
 inline uint8_t read_uint8(const buffer_t &buffer, size_t offset)
 {
+    if (offset >= buffer.size())
+        throw std::out_of_range("read_uint8 out of bounds");
+
     return buffer[offset];
 }
 
 inline uint32_t read_uint32(const buffer_t &buffer, size_t offset)
 {
+    if (offset + sizeof(uint32_t) > buffer.size())
+        throw std::out_of_range("read_uint32 out of bounds");
+
     uint32_t value;
     std::memcpy(&value, buffer.data() + offset, sizeof(uint32_t));
     return ntohl(value);
@@ -149,4 +168,4 @@ inline void write_uint32(buffer_t &buffer, uint32_t value)
     buffer.insert(buffer.end(), byte_ptr, byte_ptr + sizeof(uint32_t));
 }
 
-#endif // PROTOCOL_H
+#endif /* PROTOCOL_H */

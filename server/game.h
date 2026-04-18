@@ -19,6 +19,7 @@ struct GameState {
     GameState(game_id_t id, player_id_t p_a_id, idx_t max_p,
               const buffer_t &initial_row);
 
+    /* Returns false if the timeout expired. */
     bool process_timeouts(int server_timeout_seconds) noexcept;
 
     bool is_their_turn(player_id_t player_id) const noexcept;

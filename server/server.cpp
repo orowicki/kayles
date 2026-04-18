@@ -23,7 +23,7 @@ Server::Server(const ServerConfig &config)
     setup_socket();
 }
 
-Server::~Server()
+Server::~Server() noexcept
 {
     if (socket_fd != -1)
         close(socket_fd);
@@ -44,7 +44,7 @@ void Server::setup_socket()
         hints.ai_protocol = IPPROTO_UDP;
 
         if (getaddrinfo(cfg.address.c_str(), nullptr, &hints, &res) != 0)
-            throw runtime_error("Failed to resolve bind address");
+            throw runtime_error("Failed to resolve bind address!");
 
         server_addr.sin_addr.s_addr =
             reinterpret_cast<sockaddr_in *>(res->ai_addr)->sin_addr.s_addr;
@@ -54,31 +54,32 @@ void Server::setup_socket()
 
     socket_fd = socket(AF_INET, SOCK_DGRAM, 0);
     if (socket_fd < 0)
-        throw runtime_error("Failed to create socket");
+        throw runtime_error("Failed to create socket!");
 
     struct timeval tv;
     tv.tv_sec = 0;
     tv.tv_usec = 500000;
     if (setsockopt(socket_fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0) {
         close(socket_fd);
-        throw runtime_error("Failed to set SO_RCVTIMEO");
+        throw runtime_error("Failed to set socket timeout (SO_RCVTIMEO)!");
     }
 
     if (bind(socket_fd, reinterpret_cast<sockaddr *>(&server_addr),
              sizeof(server_addr)) < 0) {
         close(socket_fd);
-        throw runtime_error("Failed to bind socket");
+        throw runtime_error("Failed to bind socket!");
     }
 }
 
+/* Server ignores any exceptions/errors and runs indefinitely. */
 void Server::run()
 {
     buffer_t buffer(BUFFER_SIZE);
     sockaddr_in client_addr{};
-    socklen_t client_addr_len = sizeof(client_addr);
 
     while (true) {
         try {
+            socklen_t client_addr_len = sizeof(client_addr);
             ssize_t received = recvfrom(
                 socket_fd, buffer.data(), buffer.size(), 0,
                 reinterpret_cast<sockaddr *>(&client_addr), &client_addr_len);
@@ -92,7 +93,7 @@ void Server::run()
             cleanup_expired_games();
 
         } catch (exception &e) {
-            // Ignore any exceptions
+            // Ignore all exceptions.
         }
     }
 }
@@ -196,7 +197,9 @@ void Server::handle_join(const Message &msg)
         if (out_of_ids)
             return;
 
-        out_of_ids = next_game_id == numeric_limits<game_id_t>::max();
+        if (next_game_id == numeric_limits<game_id_t>::max())
+            out_of_ids = true;
+
         game_id_t game_id = next_game_id++;
 
         auto [it, inserted] = games.emplace(

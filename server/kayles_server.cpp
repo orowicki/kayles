@@ -1,5 +1,5 @@
+#include <exception>
 #include <iostream>
-#include <string>
 #include <unistd.h>
 
 #include "args.h"
@@ -8,7 +8,6 @@
 
 using std::cerr;
 using std::exception;
-using std::string;
 
 int main(int argc, char *argv[])
 {
