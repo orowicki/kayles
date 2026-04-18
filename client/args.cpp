@@ -2,9 +2,10 @@
 #include <string>
 #include <unistd.h>
 
+#include "../common/protocol.h"
 #include "../common/utils.h"
 #include "args.h"
-#include "server_config.h"
+#include "client_config.h"
 
 using std::invalid_argument;
 using std::string;
@@ -12,32 +13,28 @@ using std::string;
 namespace
 {
 
-ServerConfig parse_args(int argc, char *argv[])
+ClientConfig parse_args(int argc, char *argv[])
 {
-    string pawn_string, address;
+    string message, address;
     int port = -1, timeout = -1;
 
     int opt;
     opterr = 0;
 
-    while ((opt = getopt(argc, argv, "r:a:p:t:")) != -1) {
+    while ((opt = getopt(argc, argv, "a:p:m:t:")) != -1) {
         switch (opt) {
-            case 'r':
-                pawn_string = optarg;
-                break;
-
             case 'a':
                 address = optarg;
                 break;
-
             case 'p':
                 port = parse_int(optarg, "Invalid port number!");
                 break;
-
+            case 'm':
+                message = optarg;
+                break;
             case 't':
                 timeout = parse_int(optarg, "Invalid timeout length!");
                 break;
-
             case '?':
                 throw invalid_argument("Unknown argument or missing value!");
         }
@@ -46,22 +43,21 @@ ServerConfig parse_args(int argc, char *argv[])
     if (optind < argc)
         throw invalid_argument("Unexpected extra positional arguments!");
 
-    ServerConfig cfg{
-        .pawn_row = parse_pawn_row(pawn_string),
+    ClientConfig cfg{
         .address = address,
         .port = port,
+        .message = parse_message(message),
         .timeout = timeout,
-        .max_pawn = static_cast<idx_t>(pawn_string.size() - 1),
     };
 
     return cfg;
 }
 
-} /* namespace */
+} // namespace
 
-ServerConfig configure_from_args(int argc, char *argv[])
+ClientConfig configure_from_args(int argc, char *argv[])
 {
-    ServerConfig cfg = parse_args(argc, argv);
+    ClientConfig cfg = parse_args(argc, argv);
 
     cfg.validate();
 

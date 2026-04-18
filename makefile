@@ -1,8 +1,8 @@
 CXX = g++
 CXXFLAGS = -std=c++23 -O2 -Wall -Wextra
 
-SERVER_SRCS = $(wildcard server/*.cpp)
-CLIENT_SRCS = $(wildcard client/*.cpp)
+SERVER_SRCS = $(wildcard server/*.cpp) $(wildcard common/*.cpp)
+CLIENT_SRCS = $(wildcard client/*.cpp) $(wildcard common/*.cpp)
 
 SERVER_EXEC = kayles_server
 CLIENT_EXEC = kayles_client

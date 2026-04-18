@@ -3,24 +3,22 @@
 #include <unistd.h>
 
 #include "args.h"
-#include "config.h"
+#include "server.h"
+#include "server_config.h"
 
 using std::cerr;
-using std::cout;
 using std::exception;
 using std::string;
 
 int main(int argc, char *argv[])
 {
-    Config cfg;
-
     try {
-        Config cfg = configure_from_args(argc, argv);
+        ServerConfig cfg = configure_from_args(argc, argv);
+        Server server(cfg);
+        server.run();
+
     } catch (exception &e) {
         cerr << e.what() << '\n';
-        return 1;
+        return EXIT_FAILURE;
     }
-
-    cout << "that's all\n";
-
 }

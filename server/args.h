@@ -1,8 +1,8 @@
 #ifndef ARGS_H
 #define ARGS_H
 
-#include "config.h"
+#include "server_config.h"
 
-Config configure_from_args(int argc, char *argv[]);
+ServerConfig configure_from_args(int argc, char *argv[]);
 
 #endif /* ARGS_H */
