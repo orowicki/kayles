@@ -3,7 +3,7 @@
 #include <unistd.h>
 
 #include "../common/utils.h"
-#include "args.h"
+#include "server_args.h"
 #include "server_config.h"
 
 using std::invalid_argument;

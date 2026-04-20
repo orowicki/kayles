@@ -2,9 +2,9 @@
 #include <string>
 #include <unistd.h>
 
-#include "../common/utils.h"
-#include "args.h"
+#include "client_args.h"
 #include "client_config.h"
+#include "utils.h"
 
 using std::invalid_argument;
 using std::string;
@@ -43,6 +43,15 @@ ClientConfig parse_args(int argc, char *argv[])
         }
     }
 
+    if (message.empty())
+        throw invalid_argument("Missing or invalid -m (message)");
+    if (address.empty())
+        throw invalid_argument("Missing or invalid -a (address)");
+    if (port == -1)
+        throw invalid_argument("Missing or invalid -p (port)");
+    if (timeout == -1)
+        throw invalid_argument("Missing or invalid -t (timeout)");
+
     if (optind < argc)
         throw invalid_argument("Unexpected extra positional arguments!");
 
@@ -56,7 +65,7 @@ ClientConfig parse_args(int argc, char *argv[])
     return cfg;
 }
 
-} // namespace
+} /* namespace */
 
 ClientConfig configure_from_args(int argc, char *argv[])
 {

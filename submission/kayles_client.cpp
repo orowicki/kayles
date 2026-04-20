@@ -2,8 +2,8 @@
 #include <iostream>
 #include <unistd.h>
 
-#include "client_args.h"
 #include "client.h"
+#include "client_args.h"
 #include "client_config.h"
 
 using std::cerr;
